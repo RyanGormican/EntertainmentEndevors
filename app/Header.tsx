@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Icon } from '@iconify/react';
 import Divider from '@mui/material/Divider';
 import './globals.css';
-const Header: React.FC<HeaderProps> = ({  }) => {
+const Header: React.FC = ({  }) => {
 
 
   return (
