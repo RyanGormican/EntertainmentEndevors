@@ -4,17 +4,42 @@ import { Grid, Card, CardContent, CardMedia, Typography, Button, MenuItem, Menu 
 import Header from '../app/Header';
 import styles from '../app/page.module.css';
 
+interface Episode {
+  id: number;
+  _embedded: {
+    show: {
+      type: string;
+      language: string;
+      name: string;
+      image: {
+        medium: string;
+      };
+    };
+  };
+  airstamp: string;
+  season: number;
+  number: number;
+  name: string;
+}
+
+interface Filters {
+  talkShow: boolean;
+  news: boolean;
+  nonEnglish: boolean;
+}
+
 export default function Home() {
-  const [totalEpisodes, setTotalEpisodes] = useState([]);
-  const [episodes, setEpisodes] = useState([]);
+  const [totalEpisodes, setTotalEpisodes] = useState<Episode[]>([]);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     talkShow: true,
-    news:true,
-    nonEnglish:true,
+    news: true,
+    nonEnglish: true,
   });
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   useEffect(() => {
     async function fetchEpisodes() {
       try {
@@ -22,17 +47,15 @@ export default function Home() {
         if (!response.ok) {
           throw new Error('Failed to fetch episodes');
         }
-        const data = await response.json();
-            const currentTimestamp = new Date().getTime();
-          const newEpisodes = data.filter(episode => {
+        const data: Episode[] = await response.json();
+        const currentTimestamp = new Date().getTime();
+        const newEpisodes = data.filter(episode => {
           const episodeTimestamp = new Date(episode.airstamp).getTime();
           return episodeTimestamp > currentTimestamp;
         });
         setTotalEpisodes(newEpisodes);
         // Filter episodes based on the current filters
         const filteredEpisodes = applyFilters(newEpisodes);
-        
-  
         // Limit the episodes to display based on the current page
         limitView(filteredEpisodes);
       } catch (error) {
@@ -44,62 +67,60 @@ export default function Home() {
 
   useEffect(() => {
     // Filter episodes based on the current filters
-        const filteredEpisodes = applyFilters(totalEpisodes);
-        // Limit the episodes to display based on the current page
-        limitView(filteredEpisodes);
-        console.log(episodes);
-  }, [page,filters]);
+    const filteredEpisodes = applyFilters(totalEpisodes);
+    // Limit the episodes to display based on the current page
+    limitView(filteredEpisodes);
+  }, [page, filters]);
 
   // Function to limit episodes to display based on the current page
-  function limitView(data) {
+  function limitView(data: Episode[]) {
     // Slice the filtered episodes based on the current page
     const limitedEpisodes = data.slice((page - 1) * 120, page * 120);
-    
     // Set the episodes to state
     setEpisodes(limitedEpisodes);
   }
 
   // Function to format the timestamp to a more user-friendly format
-  function formatTimestamp(timestamp) {
+  function formatTimestamp(timestamp: string) {
     const date = new Date(timestamp);
-    return date.toLocaleString(); 
+    return date.toLocaleString();
   }
 
   // Function to handle pagination button click
-  function handlePageClick(newPage) {
+  function handlePageClick(newPage: number) {
     setPage(newPage);
   }
 
-// Function to handle filter change
-function handleFilterChange(key, value) {
-  setFilters(prevFilters => ({
-    ...prevFilters,
-    [key]: value,
-  }));
-}
-
+  // Function to handle filter change
+  function handleFilterChange(key: keyof Filters, value: boolean) {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [key]: value,
+    }));
+  }
 
   // Function to apply filters to episodes data
- function applyFilters(data) {
-  let filteredData = data;
-  if (!filters.talkShow) {
-    filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'Talk Show');
+  function applyFilters(data: Episode[]) {
+    let filteredData = data;
+    if (!filters.talkShow) {
+      filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'Talk Show');
+    }
+    if (!filters.news) {
+      filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'News');
+    }
+    if (!filters.nonEnglish) {
+      filteredData = filteredData.filter(episode => episode._embedded.show.language === 'English');
+    }
+    filterPages(filteredData);
+    return filteredData;
   }
-  if (!filters.news) {
-    filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'News');
-  }
-   if (!filters.nonEnglish) {
-    filteredData = filteredData.filter(episode => episode._embedded.show.language === 'English');
-  }
-  filterPages(filteredData);
-  return filteredData;
-}
 
-      // Calculate the total number of pages
-  function filterPages(data) {
+  // Calculate the total number of pages
+  function filterPages(data: Episode[]) {
     const totalPages = Math.ceil(data.length / 120);
     setTotalPages(totalPages);
   }
+
   // Generate dynamic pagination buttons
   const paginationButtons = [];
   const maxButtonsToShow = 5; // Maximum number of pagination buttons to show
@@ -122,65 +143,58 @@ function handleFilterChange(key, value) {
     <main className={styles.main}>
       <Header />
       <div className="operations">
-     <Button style={{color:'white'}} onClick={()=>setAnchorEl(!anchorEl)}> Filters </Button>
-   <Menu
-  anchorEl={null}
-  open={Boolean(anchorEl)}
-  onClose={() => setAnchorEl(null)}
-  anchorOrigin={{
-    vertical: 'bottom',
-    horizontal: 'left',
-  }}
-  transformOrigin={{
-    vertical: 'top',
-    horizontal: 'left',
-  }}
->
-  {Object.entries(filters).map(([key, value]) => (
-    <MenuItem key={key}>
-      {key}
-       <input type="checkbox" checked={value} onChange={() => handleFilterChange(key, !value)} />
-    </MenuItem>
-  ))}
-</Menu>
-
-
-
-
-
+        <Button style={{color:'white'}} onClick={() => setAnchorEl(anchorEl ? null : document.body)}> Filters </Button>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+        >
+          {Object.entries(filters).map(([key, value]) => (
+            <MenuItem key={key}>
+              {key}
+              <input type="checkbox" checked={value} onChange={() => handleFilterChange(key as keyof Filters, !value)} />
+            </MenuItem>
+          ))}
+        </Menu>
       </div>
-<Grid container spacing={2} className={styles.gridContainer}>
-  {episodes.map(episode => (
-    <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={episode.id}>
-      <Card style={{ height: episode._embedded.show.image?.medium ? '100%' : '273.33px' }}>
-        {episode._embedded.show.image?.medium && 
-          <CardMedia
-            component="img"
-            height="80vh"  
-            image={episode._embedded.show.image.medium}
-            alt={episode._embedded.show.name}
-          />
-        }
-        <CardContent>
-          <Typography variant="h5" component="h2" className="Typography">
-            {episode._embedded.show.name}
-          </Typography>
-          <Typography color="textSecondary"  className="Typography">
-            Airing: {formatTimestamp(episode.airstamp)}
-          </Typography>
-          <Typography color="textSecondary"  className="Typography">
-            Season {episode.season} Episode {episode.number}
-          </Typography>
-          <Typography variant="body2" component="p"  className="Typography">
-            {episode.name}
-          </Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-  ))}
-</Grid>
-
-
+      <Grid container spacing={2} className={styles.gridContainer}>
+        {episodes.map(episode => (
+          <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={episode.id}>
+            <Card style={{ height: episode._embedded.show.image?.medium ? '100%' : '273.33px' }}>
+              {episode._embedded.show.image?.medium && 
+                <CardMedia
+                  component="img"
+                  height="80vh"  
+                  image={episode._embedded.show.image.medium}
+                  alt={episode._embedded.show.name}
+                />
+              }
+              <CardContent>
+                <Typography variant="h5" component="h2" className="Typography">
+                  {episode._embedded.show.name}
+                </Typography>
+                <Typography color="textSecondary"  className="Typography">
+                  Airing: {formatTimestamp(episode.airstamp)}
+                </Typography>
+                <Typography color="textSecondary"  className="Typography">
+                  Season {episode.season} Episode {episode.number}
+                </Typography>
+                <Typography variant="body2" component="p"  className="Typography">
+                  {episode.name}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
       <div className="pagination">
         {startPage !== 1 && (
           <Button
