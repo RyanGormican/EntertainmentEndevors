@@ -7,7 +7,7 @@ const Header: React.FC<HeaderProps> = ({  }) => {
 
 
   return (
-    <header className="flex justify-between items-center p-12 flex-col">
+    <header>
       <Link href="/Home">
         <div className="title">EntertainmentEndevors</div>
       </Link>
