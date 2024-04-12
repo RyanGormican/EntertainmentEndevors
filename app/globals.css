@@ -145,10 +145,19 @@ header {
 }
 .operations{
     padding-top:5vh;
+    color:white;
+     font-family: "Barlow", sans-serif;
+  font-weight: 300;
+  font-style: normal;
 }
 .Typography{
   text-align:center;
   font-family: "Barlow", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+.card{
+    min-height:'500px';
+    max-height:'500px';
+    display: 'flex';
 }
