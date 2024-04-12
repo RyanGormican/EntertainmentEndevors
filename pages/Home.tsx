@@ -6,41 +6,48 @@ import styles from '../app/page.module.css';
 
 export default function Home() {
   const [episodes, setEpisodes] = useState([]);
-  
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
   useEffect(() => {
     async function fetchEpisodes() {
       try {
-        // Get the user's current timestamp
-        const currentTimestamp = new Date().getTime();
-        
-        // Calculate the timestamp for one month ahead of the current timestamp
-        const oneMonthAheadTimestamp = new Date(currentTimestamp);
-        oneMonthAheadTimestamp.setMonth(oneMonthAheadTimestamp.getMonth() + 1);
-        const oneMonthAhead = oneMonthAheadTimestamp.getTime();
-
         const response = await fetch('https://api.tvmaze.com/schedule/full');
         if (!response.ok) {
           throw new Error('Failed to fetch episodes');
         }
         const data = await response.json();
         
-        // Filter episodes based on the user's timestamp and cutoff one month ahead
-        const filteredEpisodes = data.filter(episode => {
-          // Convert the episode's timestamp to a Date object
-          const episodeTimestamp = new Date(episode.airstamp).getTime();
-          // Compare the episode's timestamp with the user's timestamp and cutoff one month ahead
-          return episodeTimestamp > currentTimestamp && episodeTimestamp < oneMonthAhead;
-        });
-
-        setEpisodes(filteredEpisodes);
-        console.log(episodes);//
+        // Calculate the total number of pages
+        const totalPages = Math.ceil(data.length / 120);
+        setTotalPages(totalPages);
+        
+        // Limit the episodes to display based on the current page
+        limitView(data);
       } catch (error) {
         console.error('Error fetching episodes:', error);
       }
     }
     fetchEpisodes();
-  }, []);
+  }, [page]);
 
+  // Function to limit episodes to display based on the current page
+  function limitView(data) {
+    // Get the current timestamp
+    const currentTimestamp = new Date().getTime();
+
+    // Filter episodes that have not aired yet
+    const filteredEpisodes = data.filter(episode => {
+      const episodeTimestamp = new Date(episode.airstamp).getTime();
+      return episodeTimestamp > currentTimestamp;
+    });
+
+    // Slice the filtered episodes based on the current page
+    const limitedEpisodes = filteredEpisodes.slice((page - 1) * 120, page * 120);
+    
+    // Set the episodes to state
+    setEpisodes(limitedEpisodes);
+  }
   // Function to format the timestamp to a more user-friendly format
   function formatTimestamp(timestamp) {
     const date = new Date(timestamp);
@@ -57,13 +64,14 @@ export default function Home() {
         {episodes.map(episode => (
           <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={episode.id}>
             <Card>
+              {episode._embedded.show.image?.medium && 
                 <CardMedia
                   component="img"
-                  height="140"
-                  image={episode._embedded.show.image?.medium}
+                  height="80vh"
+                  image={episode._embedded.show.image.medium}
                   alt={episode._embedded.show.name}
                 />
-        
+              }
               <CardContent>
                 <Typography variant="h5" component="h2">
                   {episode._embedded.show.name}
@@ -82,6 +90,9 @@ export default function Home() {
           </Grid>
         ))}
       </Grid>
+      <div className="page">
+        Page: {page} / {totalPages}
+      </div>
     </main>
   );
 }
