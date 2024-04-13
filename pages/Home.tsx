@@ -30,7 +30,7 @@ interface Filters {
 export default function Home() {
   const [totalEpisodes, setTotalEpisodes] = useState<Episode[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [length,setLength] =useState(0);
+const [length, setLength] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 const [filters, setFilters] = useState<Filters>({});
@@ -146,16 +146,17 @@ const [filters, setFilters] = useState<Filters>({});
       </Button>
     );
   }
-function toggleAllFilters(value) {
-  const updatedFilters = {};
+function toggleAllFilters(value: boolean) { 
+  const updatedFilters: Filters = {}; 
   for (const key in filters) {
     updatedFilters[key] = value;
   }
   setFilters(updatedFilters);
 }
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+
+const handleClick = (event: React.MouseEvent<HTMLElement>) => { 
+  setAnchorEl(event.currentTarget);
+};
 
   const handleClose = () => {
     setAnchorEl(null);
