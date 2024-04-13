@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Grid, Card, CardContent, CardMedia, Typography, Button, MenuItem, Menu } from '@mui/material';
+import { Grid, Card, CardContent, CardMedia, Typography, Button, MenuItem, Popover, Menu } from '@mui/material';
 
 import Header from '../app/Header';
 import styles from '../app/page.module.css';
@@ -23,21 +23,17 @@ interface Episode {
 }
 
 interface Filters {
-  talkShow: boolean;
-  news: boolean;
-  nonEnglish: boolean;
+  [key: string]: boolean; 
 }
+
 
 export default function Home() {
   const [totalEpisodes, setTotalEpisodes] = useState<Episode[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [length,setLength] =useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [filters, setFilters] = useState<Filters>({
-    talkShow: true,
-    news: true,
-    nonEnglish: true,
-  });
+const [filters, setFilters] = useState<Filters>({});
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
@@ -58,6 +54,15 @@ export default function Home() {
         const filteredEpisodes = applyFilters(newEpisodes);
         // Limit the episodes to display based on the current page
         limitView(filteredEpisodes);
+        
+           // Set unique show types as filters
+        const uniqueTypes = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
+        const initialFilters = uniqueTypes.reduce((acc, type) => {
+          acc[type] = true; // Set initial value to true for each type
+         return acc;
+        }, {} as Filters);
+        setFilters(initialFilters);
+        
       } catch (error) {
         console.error('Error fetching episodes:', error);
       }
@@ -68,6 +73,7 @@ export default function Home() {
   useEffect(() => {
     // Filter episodes based on the current filters
     const filteredEpisodes = applyFilters(totalEpisodes);
+    setLength(filteredEpisodes.length);
     // Limit the episodes to display based on the current page
     limitView(filteredEpisodes);
   }, [page, filters]);
@@ -101,19 +107,21 @@ export default function Home() {
 
   // Function to apply filters to episodes data
   function applyFilters(data: Episode[]) {
-    let filteredData = data;
-    if (!filters.talkShow) {
-      filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'Talk Show');
+  let filteredData = data;
+
+  // Filter episodes based on the current filters
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!value) {
+      filteredData = filteredData.filter(episode => episode._embedded.show.type !== key);
     }
-    if (!filters.news) {
-      filteredData = filteredData.filter(episode => episode._embedded.show.type !== 'News');
-    }
-    if (!filters.nonEnglish) {
-      filteredData = filteredData.filter(episode => episode._embedded.show.language === 'English');
-    }
-    filterPages(filteredData);
-    return filteredData;
-  }
+  });
+
+  // Update pagination after filtering
+  filterPages(filteredData);
+
+  return filteredData;
+}
+
 
   // Calculate the total number of pages
   function filterPages(data: Episode[]) {
@@ -138,33 +146,58 @@ export default function Home() {
       </Button>
     );
   }
+function toggleAllFilters(value) {
+  const updatedFilters = {};
+  for (const key in filters) {
+    updatedFilters[key] = value;
+  }
+  setFilters(updatedFilters);
+}
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <main className={styles.main}>
       <Header />
-      <div className="operations">
-        <Button style={{color:'white'}} onClick={() => setAnchorEl(anchorEl ? null : document.body)}> Filters </Button>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left',
-          }}
-        >
-          {Object.entries(filters).map(([key, value]) => (
+        <div className="operations">
+      <Button style={{ color: 'white' }} onClick={handleClick}>
+        Filters
+      </Button>
+      <Popover
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <MenuItem>
+          <div>Types</div>
+        </MenuItem>
+        <MenuItem>
+          <Button onClick={() => toggleAllFilters(true)}>Select All</Button>
+          <Button onClick={() => toggleAllFilters(false)}>Deselect All</Button>
+        </MenuItem>
+        {Object.entries(filters)
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+          .map(([key, value]) => (
             <MenuItem key={key}>
               {key}
-              <input type="checkbox" checked={value} onChange={() => handleFilterChange(key as keyof Filters, !value)} />
+              <input type="checkbox" checked={value} onChange={() => handleFilterChange(key, !value)} />
             </MenuItem>
           ))}
-        </Menu>
-      </div>
+      </Popover>
+    </div>
       <Grid container spacing={2} className={styles.gridContainer}>
         {episodes.map(episode => (
           <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={episode.id}>
@@ -195,6 +228,9 @@ export default function Home() {
           </Grid>
         ))}
       </Grid>
+      <div>
+      {length} Entries
+      </div>
       <div className="pagination">
         {startPage !== 1 && (
           <Button
