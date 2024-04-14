@@ -238,7 +238,7 @@ export default function Home() {
         {/* Button to toggle sort direction */}
         <Button onClick={() => handleSortDirectionChange(sortDirection === 'asc' ? 'desc' : 'asc')}>
           {/* Icon indicating sort direction */}
-          {sortDirection === 'asc' ? <Icon icon="mdi:sort-ascending" color="#e8eaea" width="60" /> : <Icon icon="mdi:sort-descending" color="#e8eaea" width="60" />}
+          {sortDirection === 'asc' ? <Icon icon="mdi:sort-descending" color="#e8eaea" width="60" /> : <Icon icon="mdi:sort-ascending" color="#e8eaea" width="60" />}
         </Button>
       </div>
       {/* Grid container for displaying episodes */}
