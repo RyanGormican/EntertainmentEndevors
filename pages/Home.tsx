@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Grid, Card, CardContent, CardMedia, Typography, Button, MenuItem, Popover } from '@mui/material';
+import { Button, Menu, MenuItem, Popover } from '@mui/material';
 
 import Header from '../app/Header';
 import styles from '../app/page.module.css';
 import { Icon } from '@iconify/react';
+import Episode from '../app/Episode';
 interface Episode {
   id: number;
   _embedded: {
@@ -37,7 +38,8 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
+  const [typesAnchorEl, setTypesAnchorEl] = useState<null | HTMLElement>(null);
+  const [languagesAnchorEl, setLanguagesAnchorEl] = useState<null | HTMLElement>(null);
   // Fetch episodes from API on component mount
   useEffect(() => {
     async function fetchEpisodes() {
@@ -56,13 +58,27 @@ export default function Home() {
 
         const filteredEpisodes = applyFilters(newEpisodes);
         limitView(filteredEpisodes);
+    // Calculate unique types
+      const uniqueTypes = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
 
-        const uniqueTypes = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
-        const initialFilters = uniqueTypes.reduce((acc, type) => {
-          acc[type] = true;
-          return acc;
-        }, {} as Filters);
-        setFilters(initialFilters);
+      // Initialize initialFilters with unique types
+  const initialFilters: Filters = uniqueTypes.reduce((acc, type) => {
+        acc[type] = { value: true, tag: 'types' };
+        return acc;
+      }, {});
+      setFilters(initialFilters);
+// Calculate unique languages
+const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language))) .filter(language => language !== null);
+
+// Initialize initialFilters with unique languages
+const languageFilters: Filters = uniqueLanguages.reduce((acc, language) => {
+  acc[language] = { value: true, tag: 'languages' };
+  return acc;
+}, {});
+setFilters(prevFilters => ({
+  ...prevFilters,
+  ...languageFilters
+}));
       } catch (error) {
         console.error('Error fetching episodes:', error);
       }
@@ -84,11 +100,6 @@ export default function Home() {
     setEpisodes(limitedEpisodes);
   }
 
-  // Format timestamp to a user-friendly format
-  function formatTimestamp(timestamp: string) {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  }
 
   // Handle pagination button click
   function handlePageClick(newPage: number) {
@@ -96,27 +107,38 @@ export default function Home() {
   }
 
   // Handle filter change
-  function handleFilterChange(key: keyof Filters, value: boolean) {
-    setFilters(prevFilters => ({
+function handleFilterChange(key: keyof Filters, value: boolean) {
+  setFilters(prevFilters => {
+    return {
       ...prevFilters,
-      [key]: value,
-    }));
-  }
+      [key]: {
+        ...prevFilters[key], 
+        value: value, 
+      },
+    };
+  });
+}
 
-  // Apply filters to episodes data
-  function applyFilters(data: Episode[]) {
-    let filteredData = data;
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (!value) {
+// Apply filters to episodes data
+function applyFilters(data: Episode[]) {
+  let filteredData = data;
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!value.value) {
+      if (value.tag === 'types') {
         filteredData = filteredData.filter(episode => episode._embedded.show.type !== key);
+      } else if (value.tag === 'languages') {
+        filteredData = filteredData.filter(episode => episode._embedded.show.language !== key);
       }
-    });
+    }
+  });
 
-    filterPages(filteredData);
+  filterPages(filteredData);
 
-    return filteredData;
-  }
+  return filteredData;
+}
+
 
   // Calculate total pages based on filtered data
   function filterPages(data: Episode[]) {
@@ -152,14 +174,23 @@ export default function Home() {
     setSortDirection(direction);
   }
 
-  // Toggle all filters to selected value
-  function toggleAllFilters(value: boolean) {
-    const updatedFilters: Filters = {};
-    for (const key in filters) {
-      updatedFilters[key] = value;
+// Toggle all filters to selected value
+function toggleAllFilters(value: boolean, tag: string) {
+  const updatedFilters: Filters = {};
+  for (const key in filters) {
+    if (filters[key].tag === tag) {
+      updatedFilters[key] = {
+        ...filters[key],
+        value: value,
+      };
+    } else {
+      updatedFilters[key] = filters[key]; // Keep other filters unchanged
     }
-    setFilters(updatedFilters);
   }
+  setFilters(updatedFilters);
+}
+
+
 
   // Open popover menu for filters
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -169,8 +200,15 @@ export default function Home() {
   // Close popover menu for filters
   const handleClose = () => {
     setAnchorEl(null);
+    setTypesAnchorEl(null);
+        setLanguagesAnchorEl(null);
   };
-
+  const handleTypesClose = () => {
+    setTypesAnchorEl(null);
+  }
+    const handleLanguagesClose = () => {
+    setLanguagesAnchorEl(null);
+  }
   // Generate dynamic pagination buttons
   const paginationButtons = [];
   const maxButtonsToShow = 5; // Maximum number of pagination buttons to show
@@ -211,24 +249,76 @@ export default function Home() {
             horizontal: 'left',
           }}
         >
-          <MenuItem>
+         <MenuItem onClick={() => setTypesAnchorEl(prevState => !prevState)}>
             <div>Types</div>
-          </MenuItem>
-          <MenuItem>
+         </MenuItem>
+            <MenuItem onClick={() => setLanguagesAnchorEl(prevState => !prevState)}>
+            <div>Languages</div>
+         </MenuItem>
+       
+
+        </Popover>
+<Popover
+  anchorEl={typesAnchorEl}
+  open={Boolean(typesAnchorEl)}
+  onClose={handleTypesClose}
+  anchorOrigin={{
+    vertical: 'top',
+    horizontal: 'right',
+  }}
+  transformOrigin={{
+    vertical: 'top',
+    horizontal: 'left',
+  }}
+>
+  <MenuItem>
+    {/* Buttons to select/deselect all filters */}
+    <Button onClick={() => toggleAllFilters(true,'types')}>Select All</Button>
+    <Button onClick={() => toggleAllFilters(false,'types')}>Deselect All</Button>
+  </MenuItem>
+  {/* Filter checkboxes for types */}
+  {Object.entries(filters)
+    .filter(([_, value]) => value.tag === 'types')
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => (
+      <MenuItem key={key}>
+        <span>{key}</span>
+        <input type="checkbox" checked={value.value} onChange={() => handleFilterChange(key, !value.value)} />
+      </MenuItem>
+    ))}
+</Popover>
+
+  
+        <Popover
+            anchorEl={languagesAnchorEl}
+          open={Boolean(languagesAnchorEl)}
+          onClose={handleLanguagesClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+        >
+           <MenuItem>
             {/* Buttons to select/deselect all filters */}
-            <Button onClick={() => toggleAllFilters(true)}>Select All</Button>
-            <Button onClick={() => toggleAllFilters(false)}>Deselect All</Button>
+            <Button onClick={() => toggleAllFilters(true,'languages')}>Select All</Button>
+            <Button onClick={() => toggleAllFilters(false,'languages')}>Deselect All</Button>
           </MenuItem>
           {/* Filter checkboxes */}
-          {Object.entries(filters)
-            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-            .map(([key, value]) => (
-              <MenuItem key={key}>
-                {key}
-                <input type="checkbox" checked={value} onChange={() => handleFilterChange(key, !value)} />
-              </MenuItem>
-            ))}
-        </Popover>
+       {Object.entries(filters)
+    .filter(([_, value]) => value.tag === 'languages')
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => (
+      <MenuItem key={key}>
+        <span>{key}</span>
+        <input type="checkbox" checked={value.value} onChange={() => handleFilterChange(key, !value.value)} />
+      </MenuItem>
+    ))}
+
+  </Popover>
         {/* Dropdown menu for sorting options */}
         <select value={sortOption} onChange={(e) => handleSortOptionChange(e.target.value)}>
           <option value="date">Sort by Date</option>
@@ -241,37 +331,11 @@ export default function Home() {
           {sortDirection === 'asc' ? <Icon icon="mdi:sort-descending" color="#e8eaea" width="60" /> : <Icon icon="mdi:sort-ascending" color="#e8eaea" width="60" />}
         </Button>
       </div>
+
       {/* Grid container for displaying episodes */}
-      <Grid container spacing={2} className={styles.gridContainer}>
-        {episodes.map(episode => (
-          <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={episode.id}>
-            <Card style={{ height: episode._embedded.show.image?.medium ? '100%' : '273.33px' }}>
-              {episode._embedded.show.image?.medium && (
-                <CardMedia
-                  component="img"
-                  height="80vh"
-                  image={episode._embedded.show.image.medium}
-                  alt={episode._embedded.show.name}
-                />
-              )}
-              <CardContent>
-                <Typography variant="h5" component="h2" className="Typography">
-                  {episode._embedded.show.name}
-                </Typography>
-                <Typography color="textSecondary" className="Typography">
-                  Airing: {formatTimestamp(episode.airstamp)}
-                </Typography>
-                <Typography color="textSecondary" className="Typography">
-                  Season {episode.season} Episode {episode.number}
-                </Typography>
-                <Typography variant="body2" component="p" className="Typography">
-                  {episode.name}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <div className="gridWrapper">
+      <Episode episodes={episodes}/>
+     
       {/* Display total number of entries */}
       <div className="text">{length} Entries</div>
       {/* Pagination buttons */}
@@ -299,6 +363,7 @@ export default function Home() {
             {totalPages}
           </Button>
         )}
+        </div>
       </div>
     </main>
   );

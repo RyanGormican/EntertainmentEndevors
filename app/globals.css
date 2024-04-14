@@ -143,18 +143,23 @@ header {
     z-index: 1000; 
      animation: purpleVariation 1s infinite alternate;
 }
-.operations{
-    padding-top:5vh;
-    color:white;
-     font-family: "Barlow", sans-serif;
+.operations {
+  color: white;
+  font-family: "Barlow", sans-serif;
   font-weight: 300;
   font-style: normal;
-  display:flex;
-  position:fixed;
-  width:100%;
-  background-color:grey;
-  align-items:center;
-  justify-content:center;
+  display: flex;
+  position: fixed;
+  width: 100%;
+  background-color: grey;
+  align-items: center;
+  justify-content: center;
+  top: 12.5vh; 
+  left: 0;
+  z-index: 1000; 
+}
+.gridWrapper {
+  padding-top: 14.5vh;
 }
 
 .Typography{
@@ -168,4 +173,10 @@ header {
      font-family: "Barlow", sans-serif;
   font-weight: 300;
   font-style: normal;
+  text-align:center;
+}
+.pagination{
+    text-align:center;
+    align-items:center;
+    justify-content:center;
 }
