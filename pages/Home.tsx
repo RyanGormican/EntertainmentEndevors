@@ -4,32 +4,16 @@ import { Button, Menu, MenuItem, Popover } from '@mui/material';
 import Header from '../app/Header';
 import styles from '../app/page.module.css';
 import { Icon } from '@iconify/react';
-import Episode from '../app/Episode';
-interface Episode {
-  id: number;
-  _embedded: {
-    show: {
-      type: string;
-      language: string;
-      name: string;
-      image: {
-        medium: string;
-      };
-    };
-  };
-  airstamp: string;
-  season: number;
-  number: number;
-  name: string;
-}
+import Episode,{EpisodeData} from '../app/Episode';
+
 
 interface Filters {
   [key: string]: boolean;
 }
 
 export default function Home() {
-  const [totalEpisodes, setTotalEpisodes] = useState<Episode[]>([]);
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [totalEpisodes, setTotalEpisodes] = useState<EpisodeData[]>([]);
+  const [episodes, setEpisodes] = useState<EpisodeData[]>([]);
   const [length, setLength] = useState<number>(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -121,7 +105,7 @@ function handleFilterChange(key: keyof Filters, value: boolean) {
 
 
 // Apply filters to episodes data
-function applyFilters(data: Episode[]) {
+function applyFilters(data: EpisodeData[]) {
   let filteredData = data;
 
   Object.entries(filters).forEach(([key, value]) => {

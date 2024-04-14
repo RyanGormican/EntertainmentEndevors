@@ -3,7 +3,8 @@ import { Grid, Card, CardContent, CardMedia, Typography } from '@mui/material';
 import './globals.css';
 import styles from './page.module.css';
 
-interface Episode {
+
+export interface EpisodeData {
   id: number;
   _embedded: {
     show: {
@@ -21,7 +22,7 @@ interface Episode {
   name: string;
 }
 
-const Episode: React.FC<{ episodes: Episode[] }> = ({ episodes }) => {
+const Episode: React.FC<{ episodes: EpisodeData[] }> = ({ episodes }) => {
   // Format timestamp to a user-friendly format
   function formatTimestamp(timestamp: string) {
     const date = new Date(timestamp);
