@@ -1,4 +1,4 @@
-import React,  from 'react';
+import React  from 'react';
 import { Grid, Card, CardContent, CardMedia, Typography}  from '@mui/material';
 import './globals.css';
 import styles from './page.module.css';
