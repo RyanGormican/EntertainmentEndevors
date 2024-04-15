@@ -240,10 +240,10 @@ function toggleAllFilters(value: boolean, tag: string) {
             horizontal: 'left',
           }}
         >
-     <MenuItem onClick={() => setTypesAnchorEl(prevState => prevState ? null : event.currentTarget)}>
+<MenuItem onClick={(event) => setTypesAnchorEl((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
   <div>Types</div>
 </MenuItem>
-<MenuItem onClick={() => setLanguagesAnchorEl(prevState => prevState ? null : event.currentTarget)}>
+<MenuItem onClick={(event) => setLanguagesAnchorEl((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
   <div>Languages</div>
 </MenuItem>
 
