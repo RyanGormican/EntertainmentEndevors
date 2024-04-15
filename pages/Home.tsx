@@ -8,7 +8,10 @@ import Episode,{EpisodeData} from '../app/Episode';
 
 
 interface Filters {
-  [key: string]: boolean;
+  [key: string]: {
+    value: boolean;
+    tag: string;
+  };
 }
 
 export default function Home() {
