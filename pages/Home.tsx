@@ -28,50 +28,54 @@ export default function Home() {
   const [typesAnchorEl, setTypesAnchorEl] = useState<null | HTMLElement>(null);
   const [languagesAnchorEl, setLanguagesAnchorEl] = useState<null | HTMLElement>(null);
   // Fetch episodes from API on component mount
-  useEffect(() => {
-    async function fetchEpisodes() {
-      try {
-        const response = await fetch('https://api.tvmaze.com/schedule/full');
-        if (!response.ok) {
-          throw new Error('Failed to fetch episodes');
-        }
-        const data: EpisodeData[] = await response.json();
-        const currentTimestamp = new Date().getTime();
-        const newEpisodes = data.filter(episode => {
-          const episodeTimestamp = new Date(episode.airstamp).getTime();
-          return episodeTimestamp > currentTimestamp;
-        });
-        setTotalEpisodes(newEpisodes);
+useEffect(() => {
+  async function fetchEpisodes() {
+    try {
+      const response = await fetch('https://api.tvmaze.com/schedule/full');
+      if (!response.ok) {
+        throw new Error('Failed to fetch episodes');
+      }
+      const data: EpisodeData[] = await response.json();
+      const currentTimestamp = new Date().getTime();
+      const newEpisodes = data.filter(episode => {
+        const episodeTimestamp = new Date(episode.airstamp).getTime();
+        return episodeTimestamp > currentTimestamp;
+      });
+      setTotalEpisodes(newEpisodes);
 
-        const filteredEpisodes = applyFilters(newEpisodes);
-        limitView(filteredEpisodes);
-    // Calculate unique types
-      const uniqueTypes = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
+      const filteredEpisodes = applyFilters(newEpisodes);
+      limitView(filteredEpisodes);
+
+      // Calculate unique types
+      const uniqueTypes: string[] = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
 
       // Initialize initialFilters with unique types
-  const initialFilters: Filters = uniqueTypes.reduce((acc, type) => {
+      const initialFilters: Filters = uniqueTypes.reduce((acc, type) => {
         acc[type] = { value: true, tag: 'types' };
         return acc;
       }, {});
       setFilters(initialFilters);
-// Calculate unique languages
-const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language))) .filter(language => language !== null);
 
-// Initialize initialFilters with unique languages
-const languageFilters: Filters = uniqueLanguages.reduce((acc, language) => {
-  acc[language] = { value: true, tag: 'languages' };
-  return acc;
-}, {});
-setFilters(prevFilters => ({
-  ...prevFilters,
-  ...languageFilters
-}));
-      } catch (error) {
-        console.error('Error fetching episodes:', error);
-      }
+      // Calculate unique languages
+      const uniqueLanguages: string[] = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
+        .filter(language => language !== null) as string[];
+
+      // Initialize initialFilters with unique languages
+      const languageFilters: Filters = uniqueLanguages.reduce((acc, language) => {
+        acc[language] = { value: true, tag: 'languages' };
+        return acc;
+      }, {});
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        ...languageFilters
+      }));
+    } catch (error) {
+      console.error('Error fetching episodes:', error);
     }
-    fetchEpisodes();
-  }, []);
+  }
+  fetchEpisodes();
+}, []);
+
 
   // Update episodes when page, filters, sort option, or sort direction change
   useEffect(() => {
