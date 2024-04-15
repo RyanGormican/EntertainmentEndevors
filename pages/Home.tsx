@@ -32,7 +32,7 @@ export default function Home() {
         if (!response.ok) {
           throw new Error('Failed to fetch episodes');
         }
-        const data: Episode[] = await response.json();
+        const data: EpisodeData[] = await response.json();
         const currentTimestamp = new Date().getTime();
         const newEpisodes = data.filter(episode => {
           const episodeTimestamp = new Date(episode.airstamp).getTime();
@@ -79,7 +79,7 @@ setFilters(prevFilters => ({
   }, [page, filters, sortOption, sortDirection]);
 
   // Function to limit episodes displayed based on current page
-  function limitView(data: Episode[]) {
+  function limitView(data: EpisodeData[]) {
     const limitedEpisodes = data.slice((page - 1) * 120, page * 120);
     setEpisodes(limitedEpisodes);
   }
@@ -125,13 +125,13 @@ function applyFilters(data: EpisodeData[]) {
 
 
   // Calculate total pages based on filtered data
-  function filterPages(data: Episode[]) {
+  function filterPages(data: EpisodeData[]) {
     const totalPages = Math.ceil(data.length / 120);
     setTotalPages(totalPages);
   }
 
   // Sort episodes based on selected option and direction
-  function sortEpisodes(data: Episode[]) {
+  function sortEpisodes(data: EpisodeData[]) {
     switch (sortOption) {
       case 'date':
         return data.sort((a, b) => {
