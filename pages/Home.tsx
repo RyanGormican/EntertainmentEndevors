@@ -47,24 +47,24 @@ useEffect(() => {
       limitView(filteredEpisodes);
 
       // Calculate unique types
-      const uniqueTypes: string[] = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
+      const uniqueTypes = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.type)));
 
       // Initialize initialFilters with unique types
       const initialFilters: Filters = uniqueTypes.reduce((acc, type) => {
         acc[type] = { value: true, tag: 'types' };
         return acc;
-      }, {});
+      }, {} as Filters);
       setFilters(initialFilters);
 
       // Calculate unique languages
-      const uniqueLanguages: string[] = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
+      const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
         .filter(language => language !== null) as string[];
 
       // Initialize initialFilters with unique languages
       const languageFilters: Filters = uniqueLanguages.reduce((acc, language) => {
         acc[language] = { value: true, tag: 'languages' };
         return acc;
-      }, {});
+      }, {} as Filters);
       setFilters(prevFilters => ({
         ...prevFilters,
         ...languageFilters
