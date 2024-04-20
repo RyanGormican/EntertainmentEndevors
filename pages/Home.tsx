@@ -28,6 +28,7 @@ export default function Home() {
   const [typesAnchorEl, setTypesAnchorEl] = useState<null | HTMLElement>(null);
   const [languagesAnchorEl, setLanguagesAnchorEl] = useState<null | HTMLElement>(null);
   const [networksAnchorE1, setNetworksAnchorEl] = useState<null | HTMLElement>(null);
+  const [streamingServiceAnchorE1, setStreamingServiceAnchorE1] = useState<null | HTMLElement>(null);
   // Fetch episodes from API on component mount
 useEffect(() => {
   async function fetchEpisodes() {
@@ -56,7 +57,6 @@ useEffect(() => {
         return acc;
       }, {} as Filters);
       setFilters(initialFilters);
-      console.log(filteredEpisodes);
       // Calculate unique languages
       const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
         .filter(language => language !== null) as string[];
@@ -72,7 +72,6 @@ useEffect(() => {
         ...languageFilters
       }));
        // Extract unique network names
-       console.log(filteredEpisodes);
     const uniqueNetworks = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.network?.name)))
   .filter(network => network !== undefined && network !== null);
 
@@ -86,6 +85,19 @@ useEffect(() => {
         ...networkFilters
       }));
 
+
+        const uniqueStreamingService = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.webChannel?.name)))
+  .filter(webChannel => webChannel !== undefined && webChannel !== null);
+        // Initialize initialFilters with unique networks
+      const streamFilters = uniqueStreamingService.reduce((acc, streamservice) => {
+        acc[streamservice] = { value: true, tag: 'streamingservice' };
+        return acc;
+      }, {} as Filters);
+       setFilters(prevFilters => ({
+        ...prevFilters,
+        ...streamFilters
+      }));
+      console.log(filteredEpisodes);
     } catch (error) {
       console.error('Error fetching episodes:', error);
     }
@@ -140,6 +152,8 @@ function applyFilters(data: EpisodeData[]) {
         filteredData = filteredData.filter(episode => episode._embedded.show.language !== key);
       }else if (value.tag === 'networks') {
         filteredData = filteredData.filter(episode => episode._embedded.show.network?.name !== key);
+      }else if (value.tag === 'streamingservice') {
+        filteredData = filteredData.filter(episode => episode._embedded.show.webChannel?.name !== key);
       }
     }
   });
@@ -213,6 +227,7 @@ function toggleAllFilters(value: boolean, tag: string) {
     setTypesAnchorEl(null);
         setLanguagesAnchorEl(null);
         setNetworksAnchorEl(null);
+        setStreamingServiceAnchorE1(null);
   };
   const handleTypesClose = () => {
     setTypesAnchorEl(null);
@@ -222,6 +237,9 @@ function toggleAllFilters(value: boolean, tag: string) {
   }
       const handleNetworksClose = () => {
     setNetworksAnchorEl(null);
+  }
+    const handleStreamingServiceClose = () => {
+    setStreamingServiceAnchorE1(null);
   }
   // Generate dynamic pagination buttons
   const paginationButtons = [];
@@ -272,7 +290,9 @@ function toggleAllFilters(value: boolean, tag: string) {
 <MenuItem onClick={(event) => setNetworksAnchorEl((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
   <div>Networks</div>
 </MenuItem>
-       
+<MenuItem onClick={(event) => setStreamingServiceAnchorE1((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
+  <div>Streaming Service</div>
+</MenuItem>       
 
         </Popover>
 <Popover
@@ -358,6 +378,37 @@ function toggleAllFilters(value: boolean, tag: string) {
           {/* Filter checkboxes */}
        {Object.entries(filters)
     .filter(([_, value]) => value.tag === 'networks')
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => (
+      <MenuItem key={key}>
+        <span>{key}</span>
+        <input type="checkbox" checked={value.value} onChange={() => handleFilterChange(key, !value.value)} />
+      </MenuItem>
+    ))}
+
+  </Popover>
+
+      <Popover
+            anchorEl={streamingServiceAnchorE1}
+          open={Boolean(streamingServiceAnchorE1)}
+          onClose={handleStreamingServiceClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+        >
+           <MenuItem>
+            {/* Buttons to select/deselect all filters */}
+            <Button onClick={() => toggleAllFilters(true,'streamingservice')}>Select All</Button>
+            <Button onClick={() => toggleAllFilters(false,'streamingservice')}>Deselect All</Button>
+          </MenuItem>
+          {/* Filter checkboxes */}
+       {Object.entries(filters)
+    .filter(([_, value]) => value.tag === 'streamingservice')
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     .map(([key, value]) => (
       <MenuItem key={key}>
