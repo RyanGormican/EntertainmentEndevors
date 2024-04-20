@@ -22,6 +22,7 @@ export interface EpisodeData {
   name: string;
 }
 
+
 const Episode: React.FC<{ episodes: EpisodeData[] }> = ({ episodes }) => {
   // Format timestamp to a user-friendly format
   function formatTimestamp(timestamp: string) {

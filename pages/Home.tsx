@@ -6,28 +6,7 @@ import styles from '../app/page.module.css';
 import { Icon } from '@iconify/react';
 import Episode,{EpisodeData} from '../app/Episode';
 
-interface Network {
-  name: string;
-}
 
-interface WebChannel {
-  name: string;
-}
-
-interface Show {
-  type: string;
-  language: string;
-  network: Network | null;
-  webChannel: WebChannel | null;
-}
-
-interface EpisodeData {
-  airstamp: string;
-  _embedded: {
-    show: Show;
-  };
-
-}
 interface Filters {
   [key: string]: {
     value: boolean;
