@@ -74,9 +74,10 @@ useEffect(() => {
        // Extract unique network names
     const uniqueNetworks = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.network?.name)))
   .filter(network => network !== undefined && network !== null);
-
+  
+  const uniqueNetworksFiltered = uniqueNetworks.filter(network => network !== undefined) as string[];
       // Initialize initialFilters with unique networks
-      const networkFilters = uniqueNetworks.reduce((acc, network) => {
+      const networkFilters = uniqueNetworksFiltered.reduce((acc, network) => {
         acc[network] = { value: true, tag: 'networks' };
         return acc;
       }, {} as Filters);
@@ -88,8 +89,9 @@ useEffect(() => {
 
         const uniqueStreamingService = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.webChannel?.name)))
   .filter(webChannel => webChannel !== undefined && webChannel !== null);
-        // Initialize initialFilters with unique networks
-      const streamFilters = uniqueStreamingService.reduce((acc, streamservice) => {
+        // Initialize initialFilters with unique streaming services
+         const uniquestreamFiltered = uniqueNetworks.filter(webChannel => webChannel !== undefined) as string[];
+      const streamFilters = uniquestreamFiltered.reduce((acc, streamservice) => {
         acc[streamservice] = { value: true, tag: 'streamingservice' };
         return acc;
       }, {} as Filters);
