@@ -90,7 +90,7 @@ useEffect(() => {
         const uniqueStreamingService = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.webChannel?.name)))
   .filter(webChannel => webChannel !== undefined && webChannel !== null);
         // Initialize initialFilters with unique streaming services
-         const uniquestreamFiltered = uniqueNetworks.filter(webChannel => webChannel !== undefined) as string[];
+         const uniquestreamFiltered = uniqueStreamingService.filter(webChannel => webChannel !== undefined) as string[];
       const streamFilters = uniquestreamFiltered.reduce((acc, streamservice) => {
         acc[streamservice] = { value: true, tag: 'streamingservice' };
         return acc;
@@ -151,11 +151,23 @@ function applyFilters(data: EpisodeData[]) {
       if (value.tag === 'types') {
         filteredData = filteredData.filter(episode => episode._embedded.show.type !== key);
       } else if (value.tag === 'languages') {
-        filteredData = filteredData.filter(episode => episode._embedded.show.language !== key);
-      }else if (value.tag === 'networks') {
-        filteredData = filteredData.filter(episode => episode._embedded.show.network?.name !== key);
-      }else if (value.tag === 'streamingservice') {
-        filteredData = filteredData.filter(episode => episode._embedded.show.webChannel?.name !== key);
+        // Filter episodes with matching language or language set to null
+        filteredData = filteredData.filter(episode => {
+          const showLanguage = episode._embedded.show.language;
+          return showLanguage !== key || showLanguage === null;
+        });
+      } else if (value.tag === 'networks') {
+        // Filter episodes with matching network or network set to null
+        filteredData = filteredData.filter(episode => {
+          const networkName = episode._embedded.show.network?.name;
+          return networkName !== key || networkName === null;
+        });
+      } else if (value.tag === 'streamingservice') {
+        // Filter episodes with matching web channel or web channel set to null
+        filteredData = filteredData.filter(episode => {
+          const webChannelName = episode._embedded.show.webChannel?.name;
+          return webChannelName !== key || webChannelName === null;
+        });
       }
     }
   });
@@ -164,6 +176,7 @@ function applyFilters(data: EpisodeData[]) {
 
   return filteredData;
 }
+
 
 
   // Calculate total pages based on filtered data
