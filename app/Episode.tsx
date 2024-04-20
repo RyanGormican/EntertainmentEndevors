@@ -3,7 +3,6 @@ import { Grid, Card, CardContent, CardMedia, Typography } from '@mui/material';
 import './globals.css';
 import styles from './page.module.css';
 
-
 export interface EpisodeData {
   id: number;
   _embedded: {
@@ -14,6 +13,12 @@ export interface EpisodeData {
       image: {
         medium: string;
       };
+      network?: {
+        name: string;
+      } | null;
+      webChannel?: {
+        name: string;
+      } | null;
     };
   };
   airstamp: string;
