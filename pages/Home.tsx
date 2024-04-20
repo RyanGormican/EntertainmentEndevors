@@ -27,6 +27,7 @@ export default function Home() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [typesAnchorEl, setTypesAnchorEl] = useState<null | HTMLElement>(null);
   const [languagesAnchorEl, setLanguagesAnchorEl] = useState<null | HTMLElement>(null);
+  const [networksAnchorE1, setNetworksAnchorEl] = useState<null | HTMLElement>(null);
   // Fetch episodes from API on component mount
 useEffect(() => {
   async function fetchEpisodes() {
@@ -55,7 +56,7 @@ useEffect(() => {
         return acc;
       }, {} as Filters);
       setFilters(initialFilters);
-
+      console.log(filteredEpisodes);
       // Calculate unique languages
       const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
         .filter(language => language !== null) as string[];
@@ -65,10 +66,26 @@ useEffect(() => {
         acc[language] = { value: true, tag: 'languages' };
         return acc;
       }, {} as Filters);
+  
       setFilters(prevFilters => ({
         ...prevFilters,
         ...languageFilters
       }));
+       // Extract unique network names
+       console.log(filteredEpisodes);
+    const uniqueNetworks = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.network?.name)))
+  .filter(network => network !== undefined && network !== null);
+
+      // Initialize initialFilters with unique networks
+      const networkFilters = uniqueNetworks.reduce((acc, network) => {
+        acc[network] = { value: true, tag: 'networks' };
+        return acc;
+      }, {} as Filters);
+       setFilters(prevFilters => ({
+        ...prevFilters,
+        ...networkFilters
+      }));
+
     } catch (error) {
       console.error('Error fetching episodes:', error);
     }
@@ -121,6 +138,8 @@ function applyFilters(data: EpisodeData[]) {
         filteredData = filteredData.filter(episode => episode._embedded.show.type !== key);
       } else if (value.tag === 'languages') {
         filteredData = filteredData.filter(episode => episode._embedded.show.language !== key);
+      }else if (value.tag === 'networks') {
+        filteredData = filteredData.filter(episode => episode._embedded.show.network?.name !== key);
       }
     }
   });
@@ -193,12 +212,16 @@ function toggleAllFilters(value: boolean, tag: string) {
     setAnchorEl(null);
     setTypesAnchorEl(null);
         setLanguagesAnchorEl(null);
+        setNetworksAnchorEl(null);
   };
   const handleTypesClose = () => {
     setTypesAnchorEl(null);
   }
     const handleLanguagesClose = () => {
     setLanguagesAnchorEl(null);
+  }
+      const handleNetworksClose = () => {
+    setNetworksAnchorEl(null);
   }
   // Generate dynamic pagination buttons
   const paginationButtons = [];
@@ -246,7 +269,9 @@ function toggleAllFilters(value: boolean, tag: string) {
 <MenuItem onClick={(event) => setLanguagesAnchorEl((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
   <div>Languages</div>
 </MenuItem>
-
+<MenuItem onClick={(event) => setNetworksAnchorEl((prevState) => prevState ? null : event.currentTarget as HTMLElement)}>
+  <div>Networks</div>
+</MenuItem>
        
 
         </Popover>
@@ -302,6 +327,37 @@ function toggleAllFilters(value: boolean, tag: string) {
           {/* Filter checkboxes */}
        {Object.entries(filters)
     .filter(([_, value]) => value.tag === 'languages')
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .map(([key, value]) => (
+      <MenuItem key={key}>
+        <span>{key}</span>
+        <input type="checkbox" checked={value.value} onChange={() => handleFilterChange(key, !value.value)} />
+      </MenuItem>
+    ))}
+
+  </Popover>
+  
+        <Popover
+            anchorEl={networksAnchorE1}
+          open={Boolean(networksAnchorE1)}
+          onClose={handleNetworksClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+        >
+           <MenuItem>
+            {/* Buttons to select/deselect all filters */}
+            <Button onClick={() => toggleAllFilters(true,'networks')}>Select All</Button>
+            <Button onClick={() => toggleAllFilters(false,'networks')}>Deselect All</Button>
+          </MenuItem>
+          {/* Filter checkboxes */}
+       {Object.entries(filters)
+    .filter(([_, value]) => value.tag === 'networks')
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     .map(([key, value]) => (
       <MenuItem key={key}>
