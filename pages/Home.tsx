@@ -56,7 +56,7 @@ useEffect(() => {
         acc[type] = { value: true, tag: 'types' };
         return acc;
       }, {} as Filters);
-      setFilters(initialFilters);
+
       // Calculate unique languages
       const uniqueLanguages = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.language)))
         .filter(language => language !== null) as string[];
@@ -66,40 +66,34 @@ useEffect(() => {
         acc[language] = { value: true, tag: 'languages' };
         return acc;
       }, {} as Filters);
-  
+
+      // Extract unique network names and streaming services
+      const uniqueNetworks = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.network?.name)))
+        .filter(network => network !== undefined && network !== null);
+
+      const uniqueStreamingServices = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.webChannel?.name)))
+        .filter(webChannel => webChannel !== undefined && webChannel !== null);
+
+      // Initialize initialFilters with unique networks and streaming services
+      const networkAndStreamFilters: Filters = {
+        ...uniqueNetworks.reduce((acc, network) => {
+          acc[network] = { value: true, tag: 'networks' };
+          return acc;
+        }, {} as Filters),
+        ...uniqueStreamingServices.reduce((acc, webChannel) => {
+          acc[webChannel] = { value: true, tag: 'streamingservice' };
+          return acc;
+        }, {} as Filters)
+      };
+
+      // Update state with all initial filters
       setFilters(prevFilters => ({
         ...prevFilters,
-        ...languageFilters
+        ...initialFilters,
+        ...languageFilters,
+        ...networkAndStreamFilters
       }));
-       // Extract unique network names
-    const uniqueNetworks = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.network?.name)))
-  .filter(network => network !== undefined && network !== null);
-  
-  const uniqueNetworksFiltered = uniqueNetworks.filter(network => network !== undefined) as string[];
-      // Initialize initialFilters with unique networks
-      const networkFilters = uniqueNetworksFiltered.reduce((acc, network) => {
-        acc[network] = { value: true, tag: 'networks' };
-        return acc;
-      }, {} as Filters);
-       setFilters(prevFilters => ({
-        ...prevFilters,
-        ...networkFilters
-      }));
-
-
-        const uniqueStreamingService = Array.from(new Set(newEpisodes.map(episode => episode._embedded.show.webChannel?.name)))
-  .filter(webChannel => webChannel !== undefined && webChannel !== null);
-        // Initialize initialFilters with unique streaming services
-         const uniquestreamFiltered = uniqueStreamingService.filter(webChannel => webChannel !== undefined) as string[];
-      const streamFilters = uniquestreamFiltered.reduce((acc, streamservice) => {
-        acc[streamservice] = { value: true, tag: 'streamingservice' };
-        return acc;
-      }, {} as Filters);
-       setFilters(prevFilters => ({
-        ...prevFilters,
-        ...streamFilters
-      }));
-      console.log(filteredEpisodes);
+ 
     } catch (error) {
       console.error('Error fetching episodes:', error);
     }
@@ -144,7 +138,6 @@ function handleFilterChange(key: keyof Filters, value: boolean) {
 
 function applyFilters(data: EpisodeData[]) {
   let filteredData = data;
-
   Object.entries(filters).forEach(([key, value]) => {
     if (!value.value) {
       if (value.tag === 'types') {
@@ -166,9 +159,9 @@ function applyFilters(data: EpisodeData[]) {
             return showLanguage !== key;
           });
         }
-      } else if (value.tag === 'networks') {
+     }  else if (value.tag === 'networks') {
         // Check if any network tags are set to false
-        const anyNetworkTagFalse = Object.values(filters).filter(filter => filter.tag === 'networks' && !filter.value).length > 0;
+        const anyNetworkTagFalse = Object.values(filters).some(filter => filter.tag === 'networks' && !filter.value);
 
         // Apply the filter using the determined condition
         if (anyNetworkTagFalse) {
@@ -176,28 +169,16 @@ function applyFilters(data: EpisodeData[]) {
             const networkName = episode._embedded.show.network?.name;
             return networkName !== key && networkName !== null;
           });
-        } else {
-          // If all network tags are true, include null entries
-          filteredData = filteredData.filter(episode => {
-            const networkName = episode._embedded.show.network?.name;
-            return networkName !== key;
-          });
         }
       } else if (value.tag === 'streamingservice') {
         // Check if any streamingservice tags are set to false
-        const anyStreamingServiceTagFalse = Object.values(filters).filter(filter => filter.tag === 'streamingservice' && !filter.value).length > 0;
+        const anyStreamingServiceTagFalse = Object.values(filters).some(filter => filter.tag === 'streamingservice' && !filter.value);
 
         // Apply the filter using the determined condition
         if (anyStreamingServiceTagFalse) {
           filteredData = filteredData.filter(episode => {
             const webChannelName = episode._embedded.show.webChannel?.name;
             return webChannelName !== key && webChannelName !== null;
-          });
-        } else {
-          // If all streamingservice tags are true, include null entries
-          filteredData = filteredData.filter(episode => {
-            const webChannelName = episode._embedded.show.webChannel?.name;
-            return webChannelName !== key;
           });
         }
       }
@@ -208,8 +189,6 @@ function applyFilters(data: EpisodeData[]) {
 
   return filteredData;
 }
-
-
 
 
   // Calculate total pages based on filtered data
