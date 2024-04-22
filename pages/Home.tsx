@@ -142,7 +142,6 @@ function handleFilterChange(key: keyof Filters, value: boolean) {
 }
 
 
-// Apply filters to episodes data
 function applyFilters(data: EpisodeData[]) {
   let filteredData = data;
 
@@ -151,23 +150,56 @@ function applyFilters(data: EpisodeData[]) {
       if (value.tag === 'types') {
         filteredData = filteredData.filter(episode => episode._embedded.show.type !== key);
       } else if (value.tag === 'languages') {
-        // Filter episodes with matching language or language set to null
-        filteredData = filteredData.filter(episode => {
-          const showLanguage = episode._embedded.show.language;
-          return showLanguage !== key || showLanguage === null;
-        });
+        // Check if any language tags are set to false
+        const anyLanguageTagFalse = Object.values(filters).filter(filter => filter.tag === 'languages' && !filter.value).length > 0;
+
+        // Apply the filter using the determined condition
+        if (anyLanguageTagFalse) {
+          filteredData = filteredData.filter(episode => {
+            const showLanguage = episode._embedded.show.language;
+            return showLanguage !== key && showLanguage !== null;
+          });
+        } else {
+          // If all language tags are true, include null entries
+          filteredData = filteredData.filter(episode => {
+            const showLanguage = episode._embedded.show.language;
+            return showLanguage !== key;
+          });
+        }
       } else if (value.tag === 'networks') {
-        // Filter episodes with matching network or network set to null
-        filteredData = filteredData.filter(episode => {
-          const networkName = episode._embedded.show.network?.name;
-          return networkName !== key || networkName === null;
-        });
+        // Check if any network tags are set to false
+        const anyNetworkTagFalse = Object.values(filters).filter(filter => filter.tag === 'networks' && !filter.value).length > 0;
+
+        // Apply the filter using the determined condition
+        if (anyNetworkTagFalse) {
+          filteredData = filteredData.filter(episode => {
+            const networkName = episode._embedded.show.network?.name;
+            return networkName !== key && networkName !== null;
+          });
+        } else {
+          // If all network tags are true, include null entries
+          filteredData = filteredData.filter(episode => {
+            const networkName = episode._embedded.show.network?.name;
+            return networkName !== key;
+          });
+        }
       } else if (value.tag === 'streamingservice') {
-        // Filter episodes with matching web channel or web channel set to null
-        filteredData = filteredData.filter(episode => {
-          const webChannelName = episode._embedded.show.webChannel?.name;
-          return webChannelName !== key || webChannelName === null;
-        });
+        // Check if any streamingservice tags are set to false
+        const anyStreamingServiceTagFalse = Object.values(filters).filter(filter => filter.tag === 'streamingservice' && !filter.value).length > 0;
+
+        // Apply the filter using the determined condition
+        if (anyStreamingServiceTagFalse) {
+          filteredData = filteredData.filter(episode => {
+            const webChannelName = episode._embedded.show.webChannel?.name;
+            return webChannelName !== key && webChannelName !== null;
+          });
+        } else {
+          // If all streamingservice tags are true, include null entries
+          filteredData = filteredData.filter(episode => {
+            const webChannelName = episode._embedded.show.webChannel?.name;
+            return webChannelName !== key;
+          });
+        }
       }
     }
   });
@@ -176,6 +208,7 @@ function applyFilters(data: EpisodeData[]) {
 
   return filteredData;
 }
+
 
 
 
