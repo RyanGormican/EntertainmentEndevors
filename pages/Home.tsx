@@ -219,22 +219,24 @@ function toggleAllFilters(value: boolean, tag: string) {
   return (
     <main className={styles.main}>
       <Header />
-      <div style="
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 50%;
-    height: 30%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
-    background-color: #fff;
-    border: 2px solid #000;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-">
+      <div
+      style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '50%',
+        height: '30%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '2rem',
+        backgroundColor: '#fff',
+        border: '2px solid #000',
+        textAlign: 'center',
+        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+      }}
+    >
     UNDER RECONSTRUCTION
 </div>
 
